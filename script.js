@@ -14,7 +14,7 @@ function Gameboard() {
     // column 0 represents left-most column
     for (let i = 0; i < rows; i++) {
         board[i] = []
-        for (let j = 0; i < columns; j++) {
+        for (let j = 0; j < columns; j++) {
             board[i].push(Cell())
         }
     }
@@ -27,8 +27,8 @@ function Gameboard() {
             row[column].getValue() === 0).map(row => row[column])
 
         if (!availableCells.length) return
-
-        board[row][column].addMarker(player)
+        // DOUBLE CHECK THIS. board[row][column] instead maybe?
+        board[row[column]].addMarker(player)
     }
 
     const printBoard = () => {
@@ -106,9 +106,50 @@ function GameController(
 
         return {
             playRound,
-            getActivePlayer
+            getActivePlayer,
+            getBoard: board.getBoard
         }
     }
 }
 
-const game = GameController()
+function ScreenController() {
+    const game = GameController();
+    const playerTurnDiv = document.querySelector('.turn')
+    const boardDiv = document.querySelector('.board')
+
+    const updateScreen = () => {
+        // clear the board
+        boardDiv.textContent = ''
+
+        // get newest board and player turn
+        const board = game.getBoard()
+        const activePlayer = game.getActivePlayer()
+
+        // display player turn
+        playerTurnDiv.textContent = `${activePlayer.name}'s turn...`
+
+        board.forEach(row => {
+            row.forEach((cell, index) => {
+                const cellBtn = document.createElement('button')
+                cellBtn.classList.add('cell')
+
+                cellBtn.dataset.column = index
+                cellBtn.textContent = cell.getValue()
+                boardDiv.appendChild(cellBtn)
+            })
+        });
+    }
+
+    function clickHandlerBoard(e) {
+        const selectedColumn = e.target.dataset.column
+        if (!selectedColumn) return
+
+        game.playRound(selectedColumn)
+        updateScreen()
+    }
+    boardDiv.addEventListener('click', clickHandlerBoard)
+    // initial screen
+    updateScreen()
+}
+
+ScreenController()
