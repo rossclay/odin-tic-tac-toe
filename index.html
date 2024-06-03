@@ -13,9 +13,9 @@
     <header>Tic Tac Toe</header>
     <div class="content">
         <div class="turn"></div>
-        <div class="board x">
-            <div class="cell x" data-cell></div>
-            <div class="cell circle" data-cell></div>
+        <div class="board" id="board">
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
             <div class="cell" data-cell></div>
             <div class="cell" data-cell></div>
             <div class="cell" data-cell></div>
@@ -25,11 +25,11 @@
             <div class="cell" data-cell></div>
         </div>
     </div>
-    <div class="winning-message">
+    <div class="winning-message" id="winning-message">
         <div data-winning-message-text>
 
         </div>
-        <button id="replayBtn">Replay</button>
+        <button id="replay-btn">Replay</button>
     </div>
     <footer>Ross Clay via The Odin Project</footer>
 </body>
