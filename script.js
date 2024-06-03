@@ -1,155 +1,97 @@
-// Gameboard is to be stored in an array
-// Players will be stored in objects
-// Object will control the flow of the game
-// Objective: Minimize global code
-// Utilize factories
-// 
-function Gameboard() {
-    const rows = 3
-    const columns = 3
-    const board = []
+const X_CLASS = 'x'
+const CIRCLE_CLASS = 'circle'
+const WINNING_COMBINATIONS = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+]
+const cells = document.querySelectorAll('[data-cell]')
+const board = document.getElementById('board')
+const winningMessage = document.getElementById('winning-message')
+const replayBtn = document.getElementById('replay-btn')
+const winningMessageText = document.querySelector('[data-winning-message-text]')
+let circleTurn
 
-    // 2d array representing the game board
-    // row 0 represents top row
-    // column 0 represents left-most column
-    for (let i = 0; i < rows; i++) {
-        board[i] = []
-        for (let j = 0; j < columns; j++) {
-            board[i].push(Cell())
-        }
+startGame()
+
+replayBtn.addEventListener('click', startGame)
+
+function startGame() {
+    circleTurn = false
+    cells.forEach(cell => {
+        cell.classList.remove(X_CLASS)
+        cell.classList.remove(CIRCLE_CLASS)
+        cell.removeEventListener('click', handleClick)
+        cell.addEventListener('click', handleClick, { once: true })
     }
-
-    // renders board for UI
-    const getBoard = () => board;
-
-    const placeMarker = (column, row, player) => {
-        const availableCells = board.filter((row) =>
-            row[column].getValue() === 0).map(row => row[column])
-
-        if (!availableCells.length) return
-        // DOUBLE CHECK THIS. board[row][column] instead maybe?
-        board[row[column]].addMarker(player)
-    }
-
-    const printBoard = () => {
-        const boardWithCells = board.map((row) => row.map((cell) => cell.getValue()))
-
-        console.log(boardWithCells)
-
-    }
-    return { getBoard, placeMarker, printBoard }
+    )
+    setBoardHoverClass()
+    winningMessage.classList.remove('show')
 }
 
+function handleClick(e) {
+    const cell = e.target
+    const currentClass = circleTurn ? CIRCLE_CLASS : X_CLASS
+    // Place Marker
+    placeMarker(cell, currentClass)
 
-// a cell represents one tile on the board and can have one of the following values
-// 0: there is no marker in the tile
-// 1: player 1 has placed a marker in the tile
-// 2: player 2 has placed a marker in the tile
-function Cell() {
-    let value = 0
-
-    const addMarker = (player) => {
-        value = player
+    // check for win
+    if (checkWin(currentClass)) {
+        endGame(false)
     }
-
-    const getValue = () => value
-    return {
-        addMarker,
-        getValue
+    // check for draw
+    else if (isDraw()) {
+        endGame(true)
+    }
+    // switch Turn
+    else {
+        SwitchTurns()
+        setBoardHoverClass()
     }
 }
 
-function GameController(
-    playerOneName = 'Player One',
-    playerTwoName = 'Player Two'
-) {
-    const board = Gameboard()
+function placeMarker(cell, currentClass) {
+    cell.classList.add(currentClass)
+}
 
-    const players = [
-        {
-            name: playerOneName,
-            marker: 1
-        },
-        {
-            name: playerTwoName,
-            marker: 2
-        }
-    ]
+function SwitchTurns() {
+    circleTurn = !circleTurn
+}
 
-    let activePlayer = players[0]
-
-    const switchPlayerTurn = () => {
-        activePlayer = activePlayer === players[0] ? players[1] : players[0]
-
-        const getActivePlayer = () => activePlayer
-
-        const printNewRound = () => {
-            board.printBoard()
-            console.log(`${getActivePlayer().name}'s turn.`)
-        }
-
-        const playRound = (column, row) => {
-            console.log(
-                `Placing ${getActivePlayer().name}'s marker on the board...`
-            )
-            board.placeMarker(column, row, getActivePlayer().marker)
-            // check for winner
-            // UNDER CONSTRUCTION
-
-            // change player turn and let the player know the game status
-            switchPlayerTurn()
-            printNewRound()
-
-        }
-        // initial play game message
-        printNewRound()
-
-        return {
-            playRound,
-            getActivePlayer,
-            getBoard: board.getBoard
-        }
+function setBoardHoverClass() {
+    board.classList.remove(X_CLASS)
+    board.classList.remove(CIRCLE_CLASS)
+    if (circleTurn) {
+        board.classList.add(CIRCLE_CLASS)
+    } else {
+        board.classList.add(X_CLASS)
     }
 }
 
-function ScreenController() {
-    const game = GameController();
-    const playerTurnDiv = document.querySelector('.turn')
-    const boardDiv = document.querySelector('.board')
-
-    const updateScreen = () => {
-        // clear the board
-        boardDiv.textContent = ''
-
-        // get newest board and player turn
-        const board = game.getBoard()
-        const activePlayer = game.getActivePlayer()
-
-        // display player turn
-        playerTurnDiv.textContent = `${activePlayer.name}'s turn...`
-
-        board.forEach(row => {
-            row.forEach((cell, index) => {
-                const cellBtn = document.createElement('button')
-                cellBtn.classList.add('cell')
-
-                cellBtn.dataset.column = index
-                cellBtn.textContent = cell.getValue()
-                boardDiv.appendChild(cellBtn)
-            })
-        });
+function endGame(draw) {
+    if (draw) {
+        winningMessageText.innerText = 'Draw!'
+    } else {
+        winningMessageText.innerText = `${circleTurn ? "O's" : "X's"} Wins!`
     }
-
-    function clickHandlerBoard(e) {
-        const selectedColumn = e.target.dataset.column
-        if (!selectedColumn) return
-
-        game.playRound(selectedColumn)
-        updateScreen()
-    }
-    boardDiv.addEventListener('click', clickHandlerBoard)
-    // initial screen
-    updateScreen()
+    winningMessage.classList.add('show')
 }
 
-ScreenController()
+function isDraw() {
+    return [...cells].every(cell => {
+        return cell.classList.contains(X_CLASS) || cell.classList.contains(CIRCLE_CLASS)
+    })
+}
+
+function checkWin(currentClass) {
+    return WINNING_COMBINATIONS.some(combination => {
+        return combination.every(index => {
+            return cells[index].classList.contains(currentClass)
+        })
+    })
+}
