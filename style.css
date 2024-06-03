@@ -119,13 +119,13 @@ body {
 }
 
 .winning-message {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.9);
-    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -145,4 +145,8 @@ body {
     color: white;
     background-color: black;
     border-color: white;
+}
+
+.winning-message.show {
+    display: flex;
 }
